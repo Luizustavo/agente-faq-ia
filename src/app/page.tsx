@@ -75,6 +75,40 @@ function categorizeEntry(entry: FAQEntry): string {
   return bestMatch;
 }
 
+// Função para formatar o summary com títulos em negrito
+function formatSummary(text: string): string {
+  // Padrões de títulos comuns no summary
+  const titlePatterns = [
+    'Contexto:',
+    'Conceitos-Chave:',
+    'Exemplos Práticos:',
+    'Aplicação:',
+    'Erro Comum:',
+    'Resumo Final:',
+    'Definição:',
+    'Objetivos:',
+    'Metodologia:',
+    'Resultados:',
+    'Conclusão:',
+    'Referências:',
+    'Observações:',
+    'Exemplo 1:',
+    'Exemplo 2:',
+    'Exemplo 3:',
+    'Nota:'
+  ];
+
+  let formattedText = text;
+  
+  // Substituir cada padrão por versão em negrito
+  titlePatterns.forEach(pattern => {
+    const regex = new RegExp(pattern, 'g');
+    formattedText = formattedText.replace(regex, `**${pattern}**`);
+  });
+
+  return formattedText;
+}
+
 
 export default function FAQPage() {
   const [entries, setEntries] = useState<FAQEntry[]>([]);
@@ -381,9 +415,11 @@ export default function FAQPage() {
                 <div 
                   className="text-slate-700 leading-loose text-justify"
                   style={{ whiteSpace: 'pre-line' }}
-                >
-                  {selectedEntry.summary}
-                </div>
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatSummary(selectedEntry.summary)
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  }}
+                />
               </div>
             </div>
 

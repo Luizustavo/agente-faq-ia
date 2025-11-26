@@ -85,6 +85,17 @@ body {
   text-align: justify;
 }
 
+/* Títulos dentro do texto (Contexto:, Conceitos-Chave:, etc) em negrito */
+.prose p:has(strong:first-child),
+.prose p > strong:first-child {
+  font-weight: 600;
+}
+
+.prose p strong:first-child {
+  font-weight: 700;
+  font-size: 1.05em;
+}
+
 .prose strong {
   color: #0f172a;
   font-weight: 600;
