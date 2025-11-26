@@ -6,7 +6,7 @@ if (!uri) {
   throw new Error('MONGODB_URI não está definida nas variáveis de ambiente');
 }
 
-// Configurações otimizadas para Vercel e ambientes serverless
+// Configurações otimizadas para Vercel e MongoDB Atlas
 const options = {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -18,12 +18,6 @@ const options = {
   maxIdleTimeMS: 30000,
   connectTimeoutMS: 10000,
   socketTimeoutMS: 45000,
-  retryWrites: true,
-  retryReads: true,
-  ssl: true,
-  tls: true,
-  tlsAllowInvalidCertificates: false,
-  tlsAllowInvalidHostnames: false,
 };
 
 const client = new MongoClient(uri, options);
