@@ -1,12 +1,11 @@
 import { getFAQEntries } from '@/lib/db/faq-entries';
-import client from '@/lib/db/client';
+import { connectToDatabase } from '@/lib/db/client';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    await client.connect();
+    const { db } = await connectToDatabase();
     const entries = await getFAQEntries();
-    await client.close();
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formattedEntries = entries.map((entry: any) => ({
@@ -27,6 +26,9 @@ export async function GET() {
     return NextResponse.json(formattedEntries);
   } catch (error) {
     console.error('Error fetching FAQ entries:', error);
-    return NextResponse.json({ error: 'Failed to fetch FAQ entries' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to fetch FAQ entries',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
