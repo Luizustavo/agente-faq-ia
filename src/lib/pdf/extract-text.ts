@@ -1,63 +1,89 @@
 // src/lib/pdf/extract-text.ts
-import PDFParser from 'pdf2json';
+import PDFParser from "pdf2json";
 
-export async function extractTextFromBuffer(buffer: Buffer, mimeType: string): Promise<string> {
-  if (!mimeType.includes('pdf')) {
-    throw new Error(`Tipo de arquivo não suportado: ${mimeType}. Apenas PDFs são aceitos.`);
+export async function extractTextFromBuffer(
+  buffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  if (!mimeType.includes("pdf")) {
+    throw new Error(
+      `Tipo de arquivo não suportado: ${mimeType}. Apenas PDFs são aceitos.`
+    );
   }
 
   return new Promise((resolve, reject) => {
-    const pdfParser = new (PDFParser as any)(null, true); // true = ignora erros de parsing
+    const pdfParser = new (PDFParser)(null, true); // true = ignora erros de parsing
 
-    pdfParser.on('pdfParser_dataError', (errData: any) => {
-      console.error('Erro no parser PDF:', errData.parserError);
+    pdfParser.on("pdfParser_dataError", (errData: any) => {
+      console.error("Erro no parser PDF:", errData.parserError);
       reject(new Error(`Falha ao processar PDF: ${errData.parserError}`));
     });
 
-    pdfParser.on('pdfParser_dataReady', () => {
+    pdfParser.on("pdfParser_dataReady", () => {
       try {
-        // ✅ Extrai texto de forma mais confiável
-        let fullText = '';
-        const pdfData = pdfParser.getRawTextContent();
-        
-        // Método alternativo mais robusto: percorre página por página
-        const pages = pdfParser ? pdfParser.data.Pages : [];
-        for (const page of pages) {
-          if (page.Texts && Array.isArray(page.Texts)) {
-            const pageText = page.Texts
-              .map((textObj: any) => {
-                if (textObj.R && Array.isArray(textObj.R)) {
-                  return textObj.R.map((r: any) => r.T || '').join('');
-                }
-                return textObj.T || '';
-              })
-              .join(' ')
-              .replace(/\x00/g, '') // remove caracteres nulos
-              .trim();
-            if (pageText) fullText += pageText + '\n';
-          }
+        let fullText = "";
+
+        // Método robusto: percorre página por página
+        const pages = pdfParser?.data?.Pages || [];
+
+        if (!Array.isArray(pages) || pages.length === 0) {
+          reject(new Error("PDF não contém páginas válidas ou está vazio."));
+          return;
         }
 
-        // Fallback: se o método detalhado falhar, usa getRawTextContent()
-        if (!fullText.trim()) {
-          fullText = pdfData || '';
+        for (const page of pages) {
+          if (page.Texts && Array.isArray(page.Texts)) {
+            const pageText = page.Texts.map((textObj: any) => {
+              if (textObj.R && Array.isArray(textObj.R)) {
+                return textObj.R.map((r: any) => {
+                  try {
+                    // Decodifica URI component com segurança
+                    return decodeURIComponent(r.T || "");
+                  } catch {
+                    return r.T || "";
+                  }
+                }).join("");
+              }
+              return "";
+            })
+              .filter((text) => text.trim().length > 0)
+              .join(" ")
+              .trim();
+
+            if (pageText) {
+              fullText += pageText + "\n\n";
+            }
+          }
         }
 
         // Limpeza final
         const cleanText = fullText
-          .replace(/\s+/g, ' ') // normaliza espaços
-          .replace(/[^\x20-\x7E\xA0-\xFF]/g, '') // remove caracteres não imprimíveis (opcional)
+          .replace(/\s+/g, " ") // normaliza espaços
           .trim()
           .substring(0, 15000);
 
         if (cleanText.length < 30) {
-          reject(new Error('Texto extraído é muito curto ou inválido.'));
+          reject(
+            new Error(
+              "Texto extraído é muito curto ou inválido. O PDF pode estar vazio ou corrompido."
+            )
+          );
+          return;
         }
 
+        console.log(
+          `✅ Texto extraído com sucesso: ${cleanText.length} caracteres de ${pages.length} página(s)`
+        );
         resolve(cleanText);
       } catch (error) {
-        console.error('Erro ao processar PDF:', error);
-        reject(new Error('Erro inesperado ao extrair texto do PDF.'));
+        console.error("Erro ao processar PDF:", error);
+        reject(
+          new Error(
+            `Erro ao extrair texto do PDF: ${
+              error instanceof Error ? error.message : "Erro desconhecido"
+            }`
+          )
+        );
       }
     });
 
