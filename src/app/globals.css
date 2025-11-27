@@ -30,6 +30,20 @@ body {
   display: none;
 }
 
+/* Scroll suave para filtros horizontais */
+.snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+.snap-mandatory {
+  scroll-snap-type: x mandatory;
+}
+
 /* Transições suaves */
 * {
   transition-property: color, background-color, border-color;

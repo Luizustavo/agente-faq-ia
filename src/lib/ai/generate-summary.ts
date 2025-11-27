@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+// Função auxiliar para delay
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const AISummarySchema = z.object({
   title: z
     .string()
@@ -25,9 +30,12 @@ const AISummarySchema = z.object({
   theme: z.string().nullable().optional(),
 });
 
-export async function generateSummary(text: string) {
+export async function generateSummary(text: string, retryCount = 0): Promise<z.infer<typeof AISummarySchema>> {
   const trimmed = text.substring(0, 10000).trim();
   if (trimmed.length < 20) throw new Error("Texto muito curto");
+
+  const MAX_RETRIES = 3;
+  const BASE_DELAY = 15000; // 15 segundos
 
 const prompt = `Você é um professor universitário especializado em ensinar tecnologia. Seu aluno usará este material para se preparar para uma prova.
 
@@ -75,19 +83,73 @@ ${trimmed}`;
 
   if (!response.ok) {
     const err = await response.text();
+    
+    // Verificar se é erro de rate limit
+    if (err.includes('rate_limit_exceeded') && retryCount < MAX_RETRIES) {
+      // Extrair tempo de espera do erro, se disponível
+      const waitMatch = err.match(/try again in ([\d.]+)s/);
+      const waitTime = waitMatch ? Math.ceil(parseFloat(waitMatch[1]) * 1000) : BASE_DELAY;
+      
+      console.log(`Rate limit atingido. Aguardando ${waitTime / 1000}s antes de tentar novamente (tentativa ${retryCount + 1}/${MAX_RETRIES})...`);
+      await sleep(waitTime + 1000); // Adicionar 1s extra de margem
+      
+      return generateSummary(text, retryCount + 1);
+    }
+    
     throw new Error(`Groq falhou: ${err}`);
   }
 
   const data = await response.json();
   const content = data.choices[0].message.content;
 
-  console.log("AI Response:", content);
+  console.log("AI Response (raw):", content);
 
-  const parsed = JSON.parse(content);
-  console.log("Parsed JSON:", parsed);
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch (parseError) {
+    console.error("Erro ao fazer parse do JSON:", parseError);
+    throw new Error(`JSON inválido da IA: ${parseError}`);
+  }
+
+  console.log("Parsed JSON (full):", JSON.stringify(parsed, null, 2));
+  console.log("Campos disponíveis:", Object.keys(parsed));
+  console.log("Tipo do summary:", typeof parsed.summary);
+  console.log("Conteúdo do summary:", parsed.summary);
+
+  // Garantir que summary seja string
+  if (parsed.summary && typeof parsed.summary === 'object') {
+    console.warn('Summary veio como objeto, convertendo para string');
+    // Se for array, juntar os elementos
+    if (Array.isArray(parsed.summary)) {
+      parsed.summary = parsed.summary.join('\n\n');
+    } else {
+      // Se for objeto com propriedades, tentar extrair o texto
+      const summaryObj = parsed.summary as Record<string, unknown>;
+      if (summaryObj.text || summaryObj.content) {
+        parsed.summary = String(summaryObj.text || summaryObj.content);
+      } else {
+        // Último recurso: stringificar o objeto
+        parsed.summary = JSON.stringify(parsed.summary);
+      }
+    }
+  }
+
+  // Se summary não existir, tentar buscar em outros campos comuns
+  if (!parsed.summary) {
+    console.warn('Campo summary não encontrado, buscando alternativas...');
+    parsed.summary = parsed.resumo || parsed.content || parsed.text || '';
+  }
+
+  // Validar se agora é string
+  if (!parsed.summary || typeof parsed.summary !== 'string') {
+    console.error('Summary ainda inválido após tentativas de correção');
+    console.error('Objeto parsed completo:', JSON.stringify(parsed, null, 2));
+    throw new Error(`AI retornou summary em formato inválido. Tipo recebido: ${typeof parsed.summary}`);
+  }
 
   // Truncar summary se exceder o limite
-  if (parsed.summary && parsed.summary.length > 3500) {
+  if (parsed.summary.length > 3500) {
     console.warn(
       `Summary truncado de ${parsed.summary.length} para 3500 caracteres`
     );

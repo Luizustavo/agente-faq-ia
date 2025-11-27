@@ -200,10 +200,10 @@ export default function FAQPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-slate-200 bg-white sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mb-1">
                 Biblioteca de Conhecimento
               </h1>
               <p className="text-sm text-slate-600">
@@ -211,11 +211,11 @@ export default function FAQPage() {
               </p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <button
                 onClick={handleSync}
                 disabled={syncing}
-                className="px-4 py-2 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 title="Sincronizar com Google Drive"
               >
                 <svg 
@@ -226,13 +226,14 @@ export default function FAQPage() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {syncing ? 'Sincronizando...' : 'Sincronizar'}
+                <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sincronizar'}</span>
+                <span className="sm:hidden">{syncing ? 'Sync...' : 'Sync'}</span>
               </button>
 
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'recent' | 'alphabetical')}
-                className="px-4 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white"
               >
                 <option value="recent">Mais recentes</option>
                 <option value="alphabetical">A-Z</option>
@@ -241,13 +242,13 @@ export default function FAQPage() {
           </div>
 
           {/* Busca */}
-          <div className="relative mb-6">
+          <div className="relative mb-4 sm:mb-6">
             <input
               type="text"
               placeholder="Buscar resumos"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm"
+              className="w-full px-4 py-2.5 sm:py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm"
             />
             {searchTerm && (
               <button
@@ -262,45 +263,47 @@ export default function FAQPage() {
           </div>
 
           {/* Filtros */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            <button
-              onClick={() => setSelectedCategory('Todos')}
-              className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${
-                selectedCategory === 'Todos'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-              }`}
-            >
-              Todos ({entries.length})
-            </button>
+          <div className="relative -mx-4 md:mx-0">
+            <div className="flex md:flex-wrap items-center gap-2 overflow-x-auto md:overflow-x-visible px-4 md:px-0 pb-2 scrollbar-hide">
+              <button
+                onClick={() => setSelectedCategory('Todos')}
+                className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all shrink-0 ${
+                  selectedCategory === 'Todos'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                }`}
+              >
+                Todos ({entries.length})
+              </button>
 
-            {categories.map(category => {
-              const count = categoryCount(category);
-              if (count === 0) return null;
+              {categories.map(category => {
+                const count = categoryCount(category);
+                if (count === 0) return null;
 
-              return (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${
-                    selectedCategory === category
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                  }`}
-                >
-                  {category} ({count})
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all shrink-0 ${
+                      selectedCategory === category
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                    }`}
+                  >
+                    {category} ({count})
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Conteúdo */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {filteredEntries.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-slate-500 text-lg">
+          <div className="text-center py-12 sm:py-20">
+            <p className="text-slate-500 text-base sm:text-lg">
               {entries.length === 0 ? 'Nenhum resumo disponível' : 'Nenhum resultado encontrado'}
             </p>
             {searchTerm && (
@@ -313,7 +316,7 @@ export default function FAQPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredEntries.map((entry) => {
               const category = categorizeEntry(entry);
               const config = CATEGORIES[category];
@@ -365,33 +368,33 @@ export default function FAQPage() {
       {/* Modal */}
       {selectedEntry && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 z-50"
           onClick={() => setSelectedEntry(null)}
         >
           <div 
-            className="bg-white max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-white max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col rounded-lg sm:rounded-none"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="border-b border-slate-200 p-8">
+            <div className="border-b border-slate-200 p-4 sm:p-8">
               <button
                 onClick={() => setSelectedEntry(null)}
                 className="float-right text-slate-400 hover:text-slate-900 transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
 
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3">
                 {categorizeEntry(selectedEntry)}
               </div>
 
-              <h2 className="text-3xl font-bold text-slate-900 mb-4 pr-12">
+              <h2 className="text-xl sm:text-3xl font-bold text-slate-900 mb-3 sm:mb-4 pr-8 sm:pr-12">
                 {selectedEntry.title}
               </h2>
 
-              <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600 mb-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">
                 <span className="font-medium">{selectedEntry.meta.discipline}</span>
                 {selectedEntry.meta.lectureNumber && (
                   <span>Aula {selectedEntry.meta.lectureNumber}</span>
@@ -403,17 +406,17 @@ export default function FAQPage() {
               </div>
 
               {selectedEntry.source?.fileName && (
-                <div className="text-xs text-slate-400 font-mono bg-slate-50 px-3 py-2 rounded border border-slate-200 inline-block">
+                <div className="text-xs text-slate-400 font-mono bg-slate-50 px-3 py-2 rounded border border-slate-200 inline-block break-all">
                   Arquivo: {selectedEntry.source.fileName}
                 </div>
               )}
             </div>
 
             {/* Conteúdo */}
-            <div className="overflow-y-auto p-8 bg-slate-50">
-              <div className="prose prose-slate prose-sm max-w-none bg-white rounded-lg p-8 shadow-sm">
+            <div className="overflow-y-auto p-4 sm:p-8 bg-slate-50">
+              <div className="prose prose-slate prose-sm max-w-none bg-white rounded-lg p-4 sm:p-8 shadow-sm">
                 <div 
-                  className="text-slate-700 leading-loose text-justify"
+                  className="text-slate-700 leading-loose text-justify text-sm sm:text-base"
                   style={{ whiteSpace: 'pre-line' }}
                   dangerouslySetInnerHTML={{ 
                     __html: formatSummary(selectedEntry.summary)
@@ -424,10 +427,10 @@ export default function FAQPage() {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-slate-200 p-6 flex justify-end gap-3">
+            <div className="border-t border-slate-200 p-4 sm:p-6 flex justify-end gap-3">
               <button
                 onClick={() => setSelectedEntry(null)}
-                className="px-6 py-3 bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors"
+                className="px-6 py-2.5 sm:py-3 bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors rounded-md"
               >
                 Fechar
               </button>
